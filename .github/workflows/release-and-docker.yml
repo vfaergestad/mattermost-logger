@@ -44,6 +44,7 @@ jobs:
           release_name: mattermost-logger-${{ github.ref_name }}-linux-amd64
           draft: false
           prerelease: false
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Step 5: Upload the binary as a release asset
       - name: Upload Release Asset
