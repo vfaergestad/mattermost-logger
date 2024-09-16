@@ -25,7 +25,7 @@ Run with docker compose:
 ```yaml
 services:
   mattermost-logger:
-    image: mattermost-logger:latest
+    image: ghcr.io/vfaergestad/mattermost-logger:latest
     container_name: mattermost-logger
     volumes:
       - ./config.json:/app/config.json
