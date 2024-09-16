@@ -33,7 +33,7 @@ jobs:
       # Step 3: Build the binary for linux/amd64
       - name: Build Binary for linux/amd64
         run: |
-          GOOS=linux GOARCH=amd64 go build -o mattermost-logger-${{ github.ref_name }}-linux-amd64
+          GOOS=linux GOARCH=amd64 go build -o mattermost-logger-${{ github.ref_name }}-linux-amd64 cmd/main.go
 
       # Step 4: Create a GitHub Release
       - name: Create GitHub Release
