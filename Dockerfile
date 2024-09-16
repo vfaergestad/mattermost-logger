@@ -5,7 +5,6 @@ WORKDIR /app
 
 # Set environment variables for static linking
 
-COPY Makefile .
 COPY cmd cmd
 COPY config config
 COPY logger logger
