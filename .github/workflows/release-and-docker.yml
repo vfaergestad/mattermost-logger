@@ -1,0 +1,98 @@
+name: Release and Docker Build
+
+# Trigger the workflow on push to tags and to the main branch
+on:
+  push:
+    tags:
+      - '*'          # Triggers on any tag push (e.g., 0.1.0)
+    branches:
+      - main         # Triggers on push to the main branch
+
+jobs:
+  # Job for handling tag-based releases
+  release:
+    name: Build and Release on Tag
+    if: startsWith(github.ref, 'refs/tags/')  # Only run for tag pushes
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Go environment
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'  # Specify your Go version here
+
+      # Step 3: Build the binary for linux/amd64
+      - name: Build Binary for linux/amd64
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o mattermost-logger-${{ github.ref_name }}-linux-amd64
+
+      # Step 4: Create a GitHub Release
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: ${{ github.ref_name }}                         # e.g., 0.1.0
+          release_name: mattermost-logger-${{ github.ref_name }}-linux-amd64
+          draft: false
+          prerelease: false
+
+      # Step 5: Upload the binary as a release asset
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./mattermost-logger-${{ github.ref_name }}-linux-amd64
+          asset_name: mattermost-logger-${{ github.ref_name }}-linux-amd64
+          asset_content_type: application/octet-stream
+
+      # Step 6: Log in to GitHub Container Registry
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 7: Build Docker image tagged with the version
+      - name: Build Docker Image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/mattermost-logger:${{ github.ref_name }} .
+
+      # Step 8: Push Docker image to GitHub Container Registry
+      - name: Push Docker Image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/mattermost-logger:${{ github.ref_name }}
+
+  # Job for handling builds on the main branch
+  docker-latest:
+    name: Build and Push Docker Image on Main
+    if: github.ref == 'refs/heads/main'  # Only run on pushes to the main branch
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Log in to GitHub Container Registry
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 3: Build Docker image tagged as 'latest'
+      - name: Build Docker Image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/mattermost-logger:latest .
+
+      # Step 4: Push Docker image to GitHub Container Registry
+      - name: Push Docker Image
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/mattermost-logger:latest
