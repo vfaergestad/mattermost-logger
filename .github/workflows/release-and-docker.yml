@@ -17,7 +17,7 @@ jobs:
 
     permissions:
       contents: read       # Read access to repository contents
-      packages: write      # Write access to GitHub Packages (ghcr.io)
+      packages: write-all  # Write access to GitHub Packages (ghcr.io)
 
     steps:
       # Step 1: Checkout the repository
