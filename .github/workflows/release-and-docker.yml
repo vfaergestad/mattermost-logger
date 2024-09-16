@@ -78,6 +78,10 @@ jobs:
     if: github.ref == 'refs/heads/main'  # Only run on pushes to the main branch
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read       # Read access to repository contents
+      packages: write      # Write access to GitHub Packages (ghcr.io)
+
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Repository
