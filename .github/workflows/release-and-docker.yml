@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
-      contents: read       # Read access to repository contents
+      contents: write      # Read access to repository contents
       packages: write-all  # Write access to GitHub Packages (ghcr.io)
 
     steps:
