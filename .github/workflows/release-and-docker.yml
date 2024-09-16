@@ -12,7 +12,7 @@ jobs:
   # Job for handling tag-based releases
   release:
     name: Build and Release on Tag
-    if: startsWith(github.ref, 'refs/tags/')  # Only run for tag pushes
+    if: github.ref_type == 'tag'  # Only run for tag pushes
     runs-on: ubuntu-latest
 
     permissions:
