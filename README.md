@@ -19,7 +19,7 @@ A Go-based application that connects to Mattermost's WebSocket API to monitor an
 
 ### Docker
 
-A docker image of the application is available at "LINK".
+A docker image of the application is available at `ghcr.io/vfaergestad/mattermost-logger`.
 
 Run with docker compose:
 ```yaml
