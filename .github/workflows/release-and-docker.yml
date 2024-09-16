@@ -15,6 +15,10 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')  # Only run for tag pushes
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read       # Read access to repository contents
+      packages: write      # Write access to GitHub Packages (ghcr.io)
+
     steps:
       # Step 1: Checkout the repository
       - name: Checkout Repository
