@@ -22,6 +22,7 @@ A Go-based application that connects to Mattermost's WebSocket API to monitor an
 A docker image of the application is available at `ghcr.io/vfaergestad/mattermost-logger`.
 
 Run with docker compose:
+
 ```yaml
 services:
   mattermost-logger:
@@ -29,7 +30,7 @@ services:
     container_name: mattermost-logger
     volumes:
       - ./config.json:/app/config.json
-      - ./messages.json:/app/messages.json
+      - ./out:/app/out
 ```
 
 ### Build the binary
@@ -64,7 +65,7 @@ Create a `config.json` file in the project directory with the following structur
   "channel_id_1",
   "channel_id_2"
 ],
-"output_file": "messages.json",
+"output_file": "out/messages.json",
 "insecure_skip_tls_verify": false,
 "log_level": "INFO"
 }
@@ -130,4 +131,3 @@ Captured messages are written to the specified `output_file` in JSON format. Eac
 "processed_at": "2024-09-14T12:32:04Z"
 }
 ```
-
