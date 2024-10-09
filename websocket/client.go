@@ -1,23 +1,21 @@
 package websocket
 
 import (
-	"bufio"
 	"crypto/tls"
-	"encoding/json"
-	"github.com/gorilla/websocket"
-	"go.uber.org/zap"
 	"io"
 	"mattermost-message-monitor/config"
+	"mattermost-message-monitor/filewriter"
 	"mattermost-message-monitor/utils"
-	"os"
+
+	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 type Client struct {
-	cfg     *config.Config
-	log     *zap.Logger
-	conn    *websocket.Conn
-	encoder *json.Encoder
-	writer  *bufio.Writer
+	cfg        *config.Config
+	log        *zap.Logger
+	conn       *websocket.Conn
+	fileWriter *filewriter.FileWriter
 }
 
 func NewClient(cfg *config.Config, log *zap.Logger) (*Client, error) {
@@ -52,21 +50,17 @@ func NewClient(cfg *config.Config, log *zap.Logger) (*Client, error) {
 
 	log.Info("Connected to Mattermost WebSocket", zap.String("URL", wsURL))
 
-	// Open file for appending messages
-	file, err := os.OpenFile(cfg.OutputFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// Initialize FileWriter
+	fw, err := filewriter.NewFileWriter(cfg, log)
 	if err != nil {
-		log.Fatal("Error opening output file", zap.String("File", cfg.OutputFile), zap.Error(err))
+		log.Fatal("Failed to initialize FileWriter", zap.Error(err))
 	}
 
-	writer := bufio.NewWriter(file)
-	encoder := json.NewEncoder(writer)
-
 	return &Client{
-		cfg:     cfg,
-		log:     log,
-		conn:    conn,
-		encoder: encoder,
-		writer:  writer,
+		cfg:        cfg,
+		log:        log,
+		conn:       conn,
+		fileWriter: fw,
 	}, nil
 }
 
@@ -79,24 +73,23 @@ func (c *Client) Listen() {
 		}
 
 		// Delegate handling to handler.go
-		HandleMessage(messageBytes, c.cfg, c.log, c.encoder, c.writer)
+		HandleMessage(messageBytes, c.cfg, c.log, c.fileWriter)
 	}
 }
 
 func (c *Client) Close() {
-	err := c.writer.Flush()
-	if err != nil {
-		c.log.Error("Flush error", zap.Error(err))
-		return
+	// Close the FileWriter
+	if err := c.fileWriter.Close(); err != nil {
+		c.log.Error("Failed to close FileWriter", zap.Error(err))
 	}
-	err = c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+
+	// Close the WebSocket connection
+	err := c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 	if err != nil {
 		c.log.Error("Write close error", zap.Error(err))
-		return
 	}
 	err = c.conn.Close()
 	if err != nil {
 		c.log.Error("Close error", zap.Error(err))
-		return
 	}
 }

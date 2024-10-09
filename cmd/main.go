@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/signal"
-	"path/filepath"
-
 	"mattermost-message-monitor/config"
 	"mattermost-message-monitor/logger"
 	"mattermost-message-monitor/utils"
 	"mattermost-message-monitor/websocket"
+	"os"
+	"os/signal"
+	"path/filepath"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -39,7 +39,9 @@ func main() {
 		zap.String("MattermostDomain", cfg.MattermostDomain),
 		zap.Bool("UseTLS", cfg.UseTLS),
 		zap.Int("ChannelCount", len(cfg.ChannelIDs)),
-		zap.String("OutputFile", cfg.OutputFile),
+		zap.String("OutputDir", cfg.OutputDir),
+		zap.String("OutputFilePrefix", cfg.OutputFilePrefix),
+		zap.Duration("RotationInterval", time.Duration(cfg.RotationInterval)),
 		zap.Bool("InsecureSkipTLSVerify", cfg.InsecureSkipTLSVerify),
 		zap.String("LogFile", cfg.LogFile),
 	)
