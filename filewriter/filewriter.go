@@ -15,14 +15,14 @@ import (
 )
 
 type FileWriter struct {
-	cfg            *config.Config
-	log            *zap.Logger
-	mu             sync.Mutex
-	currentFile    *os.File
-	encoder        *json.Encoder
-	writer         *bufio.Writer
-	rotationTicker *time.Ticker
-	done           chan bool
+	cfg         *config.Config
+	log         *zap.Logger
+	currentFile *os.File
+	encoder     *json.Encoder
+	writer      *bufio.Writer
+	timer       *time.Timer
+	done        chan bool
+	mu          sync.Mutex
 }
 
 // NewFileWriter initializes the FileWriter
@@ -38,29 +38,50 @@ func NewFileWriter(cfg *config.Config, log *zap.Logger) (*FileWriter, error) {
 		return nil, err
 	}
 
-	// Start the rotation ticker
-	rotationDuration := time.Duration(cfg.RotationInterval)
-	fw.rotationTicker = time.NewTicker(rotationDuration)
-	go fw.handleRotation()
+	// Set the timer for the first rotation
+	fw.setNextRotation()
 
 	return fw, nil
 }
 
-// handleRotation listens for ticker events and rotates the file
-func (fw *FileWriter) handleRotation() {
-	for {
-		select {
-		case <-fw.rotationTicker.C:
-			fw.mu.Lock()
-			if err := fw.rotateFile(); err != nil {
-				fw.log.Error("Failed to rotate file", zap.Error(err))
-			}
-			fw.mu.Unlock()
-		case <-fw.done:
-			fw.rotationTicker.Stop()
-			return
-		}
+// setNextRotation calculates the next rotation time and sets the timer
+// Supports intervals of 1m, 5m, 1h, 1d, 1w, 1m. Others are defaulted to 1d.
+func (fw *FileWriter) setNextRotation() {
+	now := time.Now()
+	var nextRotation time.Time
+
+	// Calculate the next rotation based on the configured interval
+	switch time.Duration(fw.cfg.RotationInterval) {
+	case 1 * time.Minute:
+		nextRotation = now.Truncate(time.Minute).Add(time.Minute)
+	case 5 * time.Minute:
+		nextRotation = now.Truncate(5 * time.Minute).Add(5 * time.Minute)
+	case 1 * time.Hour:
+		nextRotation = now.Truncate(time.Hour).Add(time.Hour)
+	case 24 * time.Hour:
+		nextRotation = now.Truncate(24 * time.Hour).Add(24 * time.Hour)
+	case 7 * 24 * time.Hour: // 1 week
+		nextRotation = now.Truncate(7 * 24 * time.Hour).Add(7 * 24 * time.Hour)
+	case 30 * 24 * time.Hour: // 1 month
+		nextRotation = now.Truncate(30 * 24 * time.Hour).Add(30 * 24 * time.Hour)
+	default:
+		fw.log.Warn("Unsupported rotation interval; defaulting to 1 day")
+		nextRotation = now.Truncate(24 * time.Hour).Add(24 * time.Hour)
 	}
+
+	// Set the timer for the next rotation
+	durationUntilNextRotation := time.Until(nextRotation)
+	fw.timer = time.AfterFunc(durationUntilNextRotation, func() {
+		fw.mu.Lock()
+		defer fw.mu.Unlock()
+
+		if err := fw.rotateFile(); err != nil {
+			fw.log.Error("Failed to rotate file", zap.Error(err))
+		}
+
+		// Reset the timer for the next rotation
+		fw.setNextRotation()
+	})
 }
 
 // rotateFile closes the current file and opens a new one with a timestamp
@@ -121,6 +142,9 @@ func (fw *FileWriter) WriteMessage(message models.Message) error {
 // Close gracefully shuts down the FileWriter
 func (fw *FileWriter) Close() error {
 	fw.done <- true
+	if fw.timer != nil {
+		fw.timer.Stop()
+	}
 	fw.mu.Lock()
 	defer fw.mu.Unlock()
 
