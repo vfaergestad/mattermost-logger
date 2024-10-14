@@ -1,19 +1,18 @@
 package websocket
 
 import (
-	"bufio"
 	"encoding/json"
-	"strings"
-	"time"
-
 	"mattermost-message-monitor/config"
+	"mattermost-message-monitor/filewriter"
 	"mattermost-message-monitor/models"
 	"mattermost-message-monitor/utils"
+	"strings"
+	"time"
 
 	"go.uber.org/zap"
 )
 
-func HandleMessage(messageBytes []byte, cfg *config.Config, log *zap.Logger, encoder *json.Encoder, writer *bufio.Writer) {
+func HandleMessage(messageBytes []byte, cfg *config.Config, log *zap.Logger, fw *filewriter.FileWriter) {
 	var msg map[string]interface{}
 	if err := json.Unmarshal(messageBytes, &msg); err != nil {
 		log.Error("JSON Unmarshal error", zap.Error(err))
@@ -92,16 +91,11 @@ func HandleMessage(messageBytes []byte, cfg *config.Config, log *zap.Logger, enc
 	// Log the message writing at INFO level
 	log.Info("Message written to file",
 		zap.String("MessageID", message.ID),
-		zap.String("File", cfg.OutputFile),
 		zap.String("ChannelName", message.ChannelName),
 	)
 
-	// Write the message as JSON to the file
-	if err := encoder.Encode(message); err != nil {
-		log.Error("JSON Encode error", zap.Error(err))
-	}
-
-	if err := writer.Flush(); err != nil {
-		log.Error("Buffer flush error after encoding", zap.Error(err))
+	// Write the message using FileWriter
+	if err := fw.WriteMessage(message); err != nil {
+		log.Error("Failed to write message to file", zap.Error(err))
 	}
 }

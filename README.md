@@ -7,7 +7,8 @@ A Go-based application that connects to Mattermost's WebSocket API to monitor an
 - **Real-time Monitoring:** Connects to Mattermost's WebSocket API to listen for events in real-time.
 - **Event Filtering:** Processes only `"posted"` events from specified channels.
 - **Structured Logging:** Structured logs with configurable log levels (`DEBUG`, `INFO`, `WARN`, `ERROR`).
-- **JSON Output:** Writes captured messages to a `messages.json` file, including details like channel names.
+- **JSON Output:** Writes captured messages to a file, including details like channel names.
+- **File Rotation**: Rotate the output file on given intervals.
 
 ## Requirements
 
@@ -65,7 +66,9 @@ Create a `config.json` file in the project directory with the following structur
   "channel_id_1",
   "channel_id_2"
 ],
-"output_file": "out/messages.json",
+"output_dir": "out",
+"output_file_prefix": "messages",
+"rotation_interval": "5m",
 "insecure_skip_tls_verify": false,
 "log_level": "INFO"
 }
@@ -78,7 +81,9 @@ Create a `config.json` file in the project directory with the following structur
 - **`use_tls`**: Set to `true` if using TLS (`wss`), otherwise `false` (`ws`).
 - **`auth_token`**: Your Mattermost access token.
 - **`channel_ids`**: An array of channel IDs to monitor.
-- **`output_file`**: (Optional) The file where messages will be logged. Defaults to `messages.json`.
+- `output_dir`: (Optional) The directory to save the output of the bot. Defaults to `out`.
+- `output_file_prefix`: (Optional) The prefix of the files created by the bot. Defaults to `messages`.
+- `rotation_interval`: (Optional) The interval that the bot will rotate its output files. Supported: `1m`, `5m`, `1d`, `1w`, `1m`. Default: `5m`
 - **`insecure_skip_tls_verify`**: (Optional) Set to `true` to skip TLS certificate verification (not recommended for production).
 - **`log_level`**: (Optional) Set the logging level (`DEBUG`, `INFO`, `WARN`, `ERROR`). Defaults to `INFO`.
 
