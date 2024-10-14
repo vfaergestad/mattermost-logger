@@ -79,11 +79,13 @@ func (c *Client) Listen() {
 
 func (c *Client) Close() {
 	// Close the FileWriter
+	c.log.Debug("Attempting to close Filewriter")
 	if err := c.fileWriter.Close(); err != nil {
 		c.log.Error("Failed to close FileWriter", zap.Error(err))
 	}
 
 	// Close the WebSocket connection
+	c.log.Debug("Attempting to close Websocket")
 	err := c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 	if err != nil {
 		c.log.Error("Write close error", zap.Error(err))

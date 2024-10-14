@@ -21,16 +21,14 @@ type FileWriter struct {
 	encoder     *json.Encoder
 	writer      *bufio.Writer
 	timer       *time.Timer
-	done        chan bool
 	mu          sync.Mutex
 }
 
 // NewFileWriter initializes the FileWriter
 func NewFileWriter(cfg *config.Config, log *zap.Logger) (*FileWriter, error) {
 	fw := &FileWriter{
-		cfg:  cfg,
-		log:  log,
-		done: make(chan bool),
+		cfg: cfg,
+		log: log,
 	}
 
 	// Initialize the first file
@@ -123,7 +121,7 @@ func (fw *FileWriter) WriteMessage(message models.Message) error {
 	defer fw.mu.Unlock()
 
 	if fw.encoder == nil {
-		return fmt.Errorf("encoder is not initialized")
+		return fmt.Errorf("Encoder is not initialized")
 	}
 
 	if err := fw.encoder.Encode(message); err != nil {
@@ -141,7 +139,6 @@ func (fw *FileWriter) WriteMessage(message models.Message) error {
 
 // Close gracefully shuts down the FileWriter
 func (fw *FileWriter) Close() error {
-	fw.done <- true
 	if fw.timer != nil {
 		fw.timer.Stop()
 	}
