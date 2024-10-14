@@ -80,7 +80,7 @@ func LoadConfig(filename string) (*Config, error) {
 
 	// Set default RotationInterval if not specified
 	if cfg.RotationInterval == 0 {
-		cfg.RotationInterval = Duration(5 * time.Minute) // Default rotation interval
+		cfg.RotationInterval = Duration(24 * time.Hour) // Default rotation interval
 	}
 
 	// Ensure OutputDir exists
