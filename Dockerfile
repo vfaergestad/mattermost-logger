@@ -11,6 +11,7 @@ COPY logger logger
 COPY models models
 COPY utils utils
 COPY websocket websocket
+COPY filewriter filewriter
 COPY go.mod .
 
 RUN go mod tidy
