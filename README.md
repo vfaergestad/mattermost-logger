@@ -83,7 +83,7 @@ Create a `config.json` file in the project directory with the following structur
 - **`channel_ids`**: An array of channel IDs to monitor.
 - `output_dir`: (Optional) The directory to save the output of the bot. Defaults to `out`.
 - `output_file_prefix`: (Optional) The prefix of the files created by the bot. Defaults to `messages`.
-- `rotation_interval`: (Optional) The interval that the bot will rotate its output files. Supported: `1m`, `5m`, `1d`, `1w`, `1m`. Default: `5m`
+- `rotation_interval`: (Optional) The interval that the bot will rotate its output files. Supported: `1m`, `5m`, `24h`, `168h` (1 week), `720h` (1 month). Default: `24h`
 - **`insecure_skip_tls_verify`**: (Optional) Set to `true` to skip TLS certificate verification (not recommended for production).
 - **`log_level`**: (Optional) Set the logging level (`DEBUG`, `INFO`, `WARN`, `ERROR`). Defaults to `INFO`.
 

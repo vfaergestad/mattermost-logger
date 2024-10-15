@@ -52,16 +52,22 @@ func (fw *FileWriter) setNextRotation() {
 	switch time.Duration(fw.cfg.RotationInterval) {
 	case 1 * time.Minute:
 		nextRotation = now.Truncate(time.Minute).Add(time.Minute)
+		fw.log.Debug("File-rotation happening every 1m")
 	case 5 * time.Minute:
 		nextRotation = now.Truncate(5 * time.Minute).Add(5 * time.Minute)
+		fw.log.Debug("File-rotation happening every 5m")
 	case 1 * time.Hour:
 		nextRotation = now.Truncate(time.Hour).Add(time.Hour)
+		fw.log.Debug("File-rotation happening every 1h")
 	case 24 * time.Hour:
 		nextRotation = now.Truncate(24 * time.Hour).Add(24 * time.Hour)
+		fw.log.Debug("File-rotation happening every 1d")
 	case 7 * 24 * time.Hour: // 1 week
 		nextRotation = now.Truncate(7 * 24 * time.Hour).Add(7 * 24 * time.Hour)
+		fw.log.Debug("File-rotation happening every 1w")
 	case 30 * 24 * time.Hour: // 1 month
 		nextRotation = now.Truncate(30 * 24 * time.Hour).Add(30 * 24 * time.Hour)
+		fw.log.Debug("File-rotation happening every 1mo")
 	default:
 		fw.log.Warn("Unsupported rotation interval; defaulting to 1 day")
 		nextRotation = now.Truncate(24 * time.Hour).Add(24 * time.Hour)
